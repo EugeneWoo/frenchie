@@ -2,7 +2,7 @@
 
 const express = require('express');
 const router = express.Router();
-const elevenlabs = require('../services/elevenlabs');
+const edgeTts = require('../services/edge-tts');
 
 // POST /api/tts
 router.post('/', async (req, res) => {
@@ -13,13 +13,13 @@ router.post('/', async (req, res) => {
   }
 
   try {
-    const response = await elevenlabs.textToSpeech(text);
+    const audioStream = await edgeTts.textToSpeech(text);
     res.setHeader('Content-Type', 'audio/mpeg');
-    response.body.pipe(res);
+    audioStream.pipe(res);
   } catch (err) {
     return res.status(502).json({
       error: 'TTS failed',
-      detail: err.detail || err.message,
+      detail: err.message,
     });
   }
 });
