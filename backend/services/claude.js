@@ -19,15 +19,17 @@ async function evaluateResponse({ question, studentResponse, modelAnswer, priorA
   const capped = priorAttempts.slice(-3);
 
   const systemPrompt = `You are a GCSE French speaking examiner using the Edexcel mark scheme.
-Assess the student's response using two criteria:
+Assess the student's response using two criteria, each scored out of 5:
 - Communication (0–5): clarity, relevance, comprehensibility
-- Range & Accuracy (0–9): vocabulary range, grammatical accuracy, tense variety
+- Range & Accuracy (0–5): vocabulary range, grammatical accuracy, tense variety
+
+overallScore = communicationScore + rangeAccuracyScore (total out of 10).
 
 Return ONLY a JSON object with these exact fields:
 {
-  "overallScore": <int 0-9>,
+  "overallScore": <int 0-10>,
   "communicationScore": <int 0-5>,
-  "rangeAccuracyScore": <int 0-9>,
+  "rangeAccuracyScore": <int 0-5>,
   "rawResponse": "<echo student input verbatim>",
   "correctedAnswer": "<improved French version of student answer>",
   "modelAnswer": <"model answer string" or null>,
@@ -39,7 +41,7 @@ All fields except correctedAnswer and modelAnswer must be in English.${!modelAns
     `Question: ${question}`,
     `Student response: ${studentResponse}`,
     modelAnswer ? `Model answer: ${modelAnswer}` : null,
-    hasPrior ? `Prior attempts (most recent last):\n${capped.map((a, i) => `${i + 1}. Score ${a.overallScore}/9 — "${a.response}"`).join('\n')}` : null,
+    hasPrior ? `Prior attempts (most recent last):\n${capped.map((a, i) => `${i + 1}. Score ${a.overallScore}/10 — "${a.response}"`).join('\n')}` : null,
   ]
     .filter(Boolean)
     .join('\n\n');

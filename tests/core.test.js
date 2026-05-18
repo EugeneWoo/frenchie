@@ -503,22 +503,22 @@ describe('setMode()', () => {
 // Test group 7 — scoreBandClass helper
 // ---------------------------------------------------------------------------
 describe('scoreBandClass()', () => {
-  test('returns badge-red for scores 0–3', () => {
-    expect(core.scoreBandClass(0)).toBe('badge-red');
-    expect(core.scoreBandClass(1)).toBe('badge-red');
-    expect(core.scoreBandClass(3)).toBe('badge-red');
+  test('returns badge-red for ≤40% of max', () => {
+    expect(core.scoreBandClass(0, 10)).toBe('badge-red');
+    expect(core.scoreBandClass(4, 10)).toBe('badge-red');
+    expect(core.scoreBandClass(2, 5)).toBe('badge-red');
   });
 
-  test('returns badge-amber for scores 4–6', () => {
-    expect(core.scoreBandClass(4)).toBe('badge-amber');
-    expect(core.scoreBandClass(5)).toBe('badge-amber');
-    expect(core.scoreBandClass(6)).toBe('badge-amber');
+  test('returns badge-amber for 41–70% of max', () => {
+    expect(core.scoreBandClass(5, 10)).toBe('badge-amber');
+    expect(core.scoreBandClass(7, 10)).toBe('badge-amber');
+    expect(core.scoreBandClass(3, 5)).toBe('badge-amber');
   });
 
-  test('returns badge-green for scores 7–9', () => {
-    expect(core.scoreBandClass(7)).toBe('badge-green');
-    expect(core.scoreBandClass(8)).toBe('badge-green');
-    expect(core.scoreBandClass(9)).toBe('badge-green');
+  test('returns badge-green for >70% of max', () => {
+    expect(core.scoreBandClass(8, 10)).toBe('badge-green');
+    expect(core.scoreBandClass(10, 10)).toBe('badge-green');
+    expect(core.scoreBandClass(4, 5)).toBe('badge-green');
   });
 });
 

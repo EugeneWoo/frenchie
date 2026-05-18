@@ -179,7 +179,7 @@ async function playQuestionAudio(text) {
 
     const audio = getAudioEl();
     audio.src = blobUrl;
-    audio.playbackRate = 0.5;
+    audio.playbackRate = 0.75;
 
     const replayBtn = getReplayBtn();
     if (replayBtn) {

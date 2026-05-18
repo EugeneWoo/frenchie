@@ -18,14 +18,16 @@ let currentQuestion = null;
 // ---------------------------------------------------------------------------
 
 /**
- * Returns the colour class for a score badge based on GCSE bands.
- * Red 0-3, Amber 4-6, Green 7-9.
+ * Returns the colour class based on percentage of max score.
+ * ≤40% red, ≤70% amber, else green.
  * @param {number} score
+ * @param {number} max
  * @returns {string} CSS class name
  */
-function scoreBandClass(score) {
-  if (score <= 3) return 'badge-red';
-  if (score <= 6) return 'badge-amber';
+function scoreBandClass(score, max = 10) {
+  const pct = score / max;
+  if (pct <= 0.4) return 'badge-red';
+  if (pct <= 0.7) return 'badge-amber';
   return 'badge-green';
 }
 
@@ -33,10 +35,11 @@ function scoreBandClass(score) {
  * Apply score value and colour to a badge element.
  * @param {HTMLElement} el
  * @param {number} score
+ * @param {number} max
  */
-function applyBadge(el, score) {
+function applyBadge(el, score, max = 10) {
   el.textContent = String(score);
-  el.className = 'score-badge ' + scoreBandClass(score);
+  el.className = 'score-badge ' + scoreBandClass(score, max);
 }
 
 /**
@@ -105,7 +108,7 @@ function newQuestion() {
   if (translationBtn && translationEl) {
     translationEl.textContent = currentQuestion.translation || '';
     translationEl.hidden = true;
-    translationBtn.textContent = 'Show translation';
+    translationBtn.textContent = 'Show English translation of question';
     translationBtn.hidden = !currentQuestion.translation;
   }
 
@@ -356,9 +359,9 @@ function renderFeedback(evalResult) {
   const commEl = document.getElementById('score-communication');
   const rangeEl = document.getElementById('score-range');
 
-  if (overallEl) applyBadge(overallEl, evalResult.overallScore);
-  if (commEl) applyBadge(commEl, evalResult.communicationScore);
-  if (rangeEl) applyBadge(rangeEl, evalResult.rangeAccuracyScore);
+  if (overallEl) applyBadge(overallEl, evalResult.overallScore, 10);
+  if (commEl) applyBadge(commEl, evalResult.communicationScore, 5);
+  if (rangeEl) applyBadge(rangeEl, evalResult.rangeAccuracyScore, 5);
 
   // --- Text sections ---
   const rawEl = document.getElementById('feedback-raw-response');
@@ -580,7 +583,7 @@ if (typeof document !== 'undefined') {
         if (!translationEl) return;
         const hidden = translationEl.hidden;
         translationEl.hidden = !hidden;
-        translationToggleBtn.textContent = hidden ? 'Hide translation' : 'Show translation';
+        translationToggleBtn.textContent = hidden ? 'Hide translation' : 'Show English translation of question';
       });
     }
 
