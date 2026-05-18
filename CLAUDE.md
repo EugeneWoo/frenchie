@@ -54,6 +54,7 @@ tests/
   integration.test.js     # D2 cross-module integration tests (jsdom)
   gaps.test.js             # D3 gap tests — Node env (CORS no-Origin, priorAttempts route cap)
   gaps-jsdom.test.js       # D3 gap tests — jsdom env (TTL boundary, evaluate error, Excel no-header, mode switch)
+  history_real.test.js     # Bug fix regression — loads actual history.js via eval, tests real save/render pipeline
 ```
 
 ### Key Architectural Decisions
@@ -65,8 +66,11 @@ tests/
 - **Frontend module split (Phase C)**: each C-group owns a separate `.js` file (`data.js`, `core.js`, `audio.js`, `excel.js`, `themes.js`, `history.js`). `data.js` is loaded first and provides `SEEDED_QUESTIONS` as a global.
 - **C3 excel.js**: SheetJS is loaded via CDN (`https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js`) in `index.html` before `excel.js`. The module exports `parseAndLoad(arrayBuffer, filename)` for direct test use. Error display supports both `#excel-error` (test DOM) and `#upload-error` (production HTML) element IDs. Tests use `@jest-environment jsdom` docblock. Upload zone shows column hint: Column A = Question, Column B = Answer (omit for AI-judged scoring).
 - **jest test environments**: backend tests use the default `node` environment. Frontend tests require `@jest-environment jsdom` docblock at the top of each test file since the global jest config sets `testEnvironment: "node"`.
-- **TTS: msedge-tts** — `backend/services/edge-tts.js` uses `msedge-tts` npm package (`fr-FR-DeniseNeural`, `AUDIO_24KHZ_48KBITRATE_MONO_MP3`). ElevenLabs free tier blocks all voices via API. `ELEVENLABS_VOICE_ID` env var is obsolete. Frontend `audio.js` calls `/api/tts` and caches blob URL for replay. No API key needed for TTS. `audio.playbackRate = 0.5` set on both initial play and replay.
+- **TTS: msedge-tts** — `backend/services/edge-tts.js` uses `msedge-tts` npm package (`fr-FR-DeniseNeural`, `AUDIO_24KHZ_48KBITRATE_MONO_MP3`). ElevenLabs free tier blocks all voices via API. `ELEVENLABS_VOICE_ID` env var is obsolete. Frontend `audio.js` calls `/api/tts` and caches blob URL for replay. No API key needed for TTS. `audio.playbackRate = 0.75` set on play.
+- **Scoring scale**: Communication 0–5, Range & Accuracy 0–5, overallScore = sum (0–10). `scoreBandClass(score, max)` is percentage-based (≤40% red, ≤70% amber, else green) — always pass `max` (10 for overall, 5 for categories). Prior attempts display uses `/10`.
 - **STT: ElevenLabs Scribe v2** — `stt.js` uses `scribe_v2` via `POST https://api.elevenlabs.io/v1/speech-to-text`. Single `ELEVENLABS_API_KEY` covers STT only now.
+- **history.js safety rules**: (1) All `localStorage.setItem` calls are wrapped in try/catch with `console.error` — a bare `setItem` outside try/catch would propagate as "Evaluation failed" from core.js's catch block, hiding the real cause. (2) All `entry.*` field accesses in `renderHistoryEntries` use `|| ''` guards (including `entry.question`). (3) Never use `arguments.callee` — history.js is `'use strict'`; use a named function instead.
+- **history.js testing**: `tests/history.test.js` uses inlined versions of save/render (doesn't import the real module). `tests/history_real.test.js` loads the actual `frontend/history.js` via `eval()` to test the real code path. When changing history.js, run both test files.
 - **Scoring LLM: Gemini 2.5 Flash Lite** — `backend/services/claude.js` (filename unchanged, no route changes needed) uses `@google/generative-ai` with model `gemini-2.5-flash-lite`. `systemInstruction` param used for system prompt. `GEMINI_API_KEY` env var; `ANTHROPIC_API_KEY` removed. `@anthropic-ai/sdk` removed from package.json.
 - **Translation reveal** — `core.js` `newQuestion()` populates `#translation-text` and shows/hides `#translation-toggle-btn` based on `currentQuestion.translation`. Button wired in DOMContentLoaded. All 30 seeded questions have `translation` field; AI-generated questions may not (button hidden when null).
 
