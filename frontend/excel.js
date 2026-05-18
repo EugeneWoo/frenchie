@@ -50,7 +50,7 @@ function getErrorEl() {
   return document.getElementById('excel-error') || document.getElementById('upload-error');
 }
 
-function showError(message) {
+function showUploadError(message) {
   const el = getErrorEl();
   if (!el) return;
   el.textContent = message;
@@ -59,7 +59,7 @@ function showError(message) {
   el.removeAttribute('hidden');
 }
 
-function clearError() {
+function clearUploadError() {
   const el = getErrorEl();
   if (!el) return;
   el.textContent = '';
@@ -113,12 +113,12 @@ function hideReturnLink() {
  * @returns {Promise<void>}
  */
 async function parseAndLoad(arrayBuffer, filename) {
-  clearError();
+  clearUploadError();
 
   // --- Validate file extension ---
   const lower = (filename || '').toLowerCase();
   if (!lower.endsWith('.xlsx') && !lower.endsWith('.xls')) {
-    showError('Unsupported file type. Please upload a .xlsx or .xls file.');
+    showUploadError('Unsupported file type. Please upload a .xlsx or .xls file.');
     return;
   }
 
@@ -127,13 +127,13 @@ async function parseAndLoad(arrayBuffer, filename) {
   try {
     workbook = XLSX.read(arrayBuffer, { type: 'array' });
   } catch (err) {
-    showError('Could not read the file. Make sure it is a valid Excel file.');
+    showUploadError('Could not read the file. Make sure it is a valid Excel file.');
     return;
   }
 
   const firstSheetName = workbook.SheetNames[0];
   if (!firstSheetName) {
-    showError('The Excel file contains no sheets.');
+    showUploadError('The Excel file contains no sheets.');
     return;
   }
 
@@ -159,7 +159,7 @@ async function parseAndLoad(arrayBuffer, filename) {
   });
 
   if (validRows.length === 0) {
-    showError('No valid question rows found. Column A must contain French questions.');
+    showUploadError('No valid question rows found. Column A must contain French questions.');
     return;
   }
 
@@ -190,7 +190,7 @@ async function parseAndLoad(arrayBuffer, filename) {
 function revertToSeeded() {
   window.setActiveQuestions([...(window.SEEDED_QUESTIONS || [])], 'seeded');
   setModeIndicator('Practising with 30 seeded questions');
-  clearError();
+  clearUploadError();
   hideReturnLink();
 }
 
@@ -204,7 +204,7 @@ function handleFile(file) {
     await parseAndLoad(e.target.result, file.name);
   };
   reader.onerror = () => {
-    showError('Failed to read the file. Please try again.');
+    showUploadError('Failed to read the file. Please try again.');
   };
   reader.readAsArrayBuffer(file);
 }
