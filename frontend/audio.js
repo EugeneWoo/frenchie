@@ -179,6 +179,7 @@ async function playQuestionAudio(text) {
 
     const audio = getAudioEl();
     audio.src = blobUrl;
+    audio.playbackRate = 0.5;
 
     const replayBtn = getReplayBtn();
     if (replayBtn) {
@@ -212,6 +213,7 @@ function replayAudio() {
   };
 
   audio.currentTime = 0;
+  audio.playbackRate = 0.5;
   audio.play().catch(() => {});
 }
 

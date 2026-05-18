@@ -263,6 +263,31 @@ button {
   background: #004a90;
 }
 
+/* Translation reveal */
+.translation-text {
+  font-size: 0.82rem;
+  color: #6b6b6b;
+  font-style: italic;
+  margin-top: 0.35rem;
+  line-height: 1.5;
+}
+
+.btn-translation {
+  font-size: 0.78rem;
+  padding: 0.2rem 0.6rem;
+  margin-top: 0.4rem;
+  background: transparent;
+  border: 1px solid #6b6b6b;
+  color: #6b6b6b;
+  border-radius: 4px;
+  cursor: pointer;
+  box-shadow: none;
+}
+
+.btn-translation:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
 /* Link-style button */
 .btn-link {
   background: none;

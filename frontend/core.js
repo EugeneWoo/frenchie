@@ -99,6 +99,16 @@ function newQuestion() {
   const questionEl = document.getElementById('question-text');
   if (questionEl) questionEl.textContent = currentQuestion.q;
 
+  // Translation reveal — reset on each new question
+  const translationBtn = document.getElementById('translation-toggle-btn');
+  const translationEl = document.getElementById('translation-text');
+  if (translationBtn && translationEl) {
+    translationEl.textContent = currentQuestion.translation || '';
+    translationEl.hidden = true;
+    translationBtn.textContent = 'Show translation';
+    translationBtn.hidden = !currentQuestion.translation;
+  }
+
   // Clear the feedback panel
   _hideFeedbackPanel();
 
@@ -560,6 +570,18 @@ if (typeof document !== 'undefined') {
     if (modeSpeechBtn) {
       modeSpeechBtn.addEventListener('click', function () { setMode('speech'); });
       modeSpeechBtn.setAttribute('aria-pressed', 'false');
+    }
+
+    // Translation toggle
+    const translationToggleBtn = document.getElementById('translation-toggle-btn');
+    if (translationToggleBtn) {
+      translationToggleBtn.addEventListener('click', function () {
+        const translationEl = document.getElementById('translation-text');
+        if (!translationEl) return;
+        const hidden = translationEl.hidden;
+        translationEl.hidden = !hidden;
+        translationToggleBtn.textContent = hidden ? 'Hide translation' : 'Show translation';
+      });
     }
 
     // Start in text mode

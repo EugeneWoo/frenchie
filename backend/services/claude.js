@@ -1,9 +1,9 @@
 'use strict';
 
-const Anthropic = require('@anthropic-ai/sdk');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-const MODEL = 'claude-sonnet-4-6';
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const MODEL = 'gemini-2.5-flash-lite';
 
 const EDEXCEL_THEMES = {
   'home-abroad': 'Home & Abroad',
@@ -14,11 +14,6 @@ const EDEXCEL_THEMES = {
   'fitness-health': 'Fitness & Health',
 };
 
-/**
- * Evaluate a student's GCSE French speaking response.
- * Returns parsed JSON with overallScore, communicationScore, rangeAccuracyScore,
- * rawResponse, correctedAnswer, modelAnswer, comments, and optionally progressComparison.
- */
 async function evaluateResponse({ question, studentResponse, modelAnswer, priorAttempts = [] }) {
   const hasPrior = priorAttempts.length > 0;
   const capped = priorAttempts.slice(-3);
@@ -49,14 +44,13 @@ All fields except correctedAnswer and modelAnswer must be in English.${!modelAns
     .filter(Boolean)
     .join('\n\n');
 
-  const message = await client.messages.create({
+  const model = genAI.getGenerativeModel({
     model: MODEL,
-    max_tokens: 1024,
-    system: systemPrompt,
-    messages: [{ role: 'user', content: userContent }],
+    systemInstruction: systemPrompt,
   });
 
-  const raw = message.content[0].text.trim();
+  const result = await model.generateContent(userContent);
+  const raw = result.response.text().trim();
   const jsonStr = raw.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '');
   const parsed = JSON.parse(jsonStr);
 
@@ -69,32 +63,23 @@ All fields except correctedAnswer and modelAnswer must be in English.${!modelAns
   return parsed;
 }
 
-/**
- * Generate GCSE Edexcel general conversation questions for a given theme.
- * Returns an array of French question strings.
- */
 async function generateQuestions(themeSlug, count = 5) {
   const themeLabel = EDEXCEL_THEMES[themeSlug];
 
-  const message = await client.messages.create({
-    model: MODEL,
-    max_tokens: 512,
-    messages: [
-      {
-        role: 'user',
-        content: `Generate ${count} GCSE Edexcel general conversation questions in French for the theme "${themeLabel}".
+  const model = genAI.getGenerativeModel({ model: MODEL });
+
+  const result = await model.generateContent(
+    `Generate ${count} GCSE Edexcel general conversation questions in French for the theme "${themeLabel}".
 Requirements:
 - Age-appropriate for Year 10–11 UK students (14–16)
 - Match the style of real Edexcel speaking exam questions
 - Varied: some open, some comparative, some opinion-based
 - Return ONLY a JSON array of strings, no other text
 
-Example format: ["Question 1?", "Question 2?"]`,
-      },
-    ],
-  });
+Example format: ["Question 1?", "Question 2?"]`
+  );
 
-  const raw = message.content[0].text.trim();
+  const raw = result.response.text().trim();
   const jsonStr = raw.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '');
   return JSON.parse(jsonStr);
 }
