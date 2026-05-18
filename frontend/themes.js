@@ -112,10 +112,10 @@ async function handleThemeClick(btn, slug, label) {
     }
 
     const data = await res.json();
-    const questions = (data.questions || []).map(q => ({
-      q,
+    const questions = (data.questions || []).map(item => ({
+      q: typeof item === 'string' ? item : item.q,
       answer: null,
-      translation: null,
+      translation: typeof item === 'object' ? (item.translation || null) : null,
       theme: slug,
     }));
 

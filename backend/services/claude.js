@@ -76,9 +76,9 @@ Requirements:
 - Age-appropriate for Year 10–11 UK students (14–16)
 - Match the style of real Edexcel speaking exam questions
 - Varied: some open, some comparative, some opinion-based
-- Return ONLY a JSON array of strings, no other text
+- Return ONLY a JSON array of objects, no other text
 
-Example format: ["Question 1?", "Question 2?"]`
+Example format: [{"q": "Question en français?", "translation": "English translation of the question?"}]`
   );
 
   const raw = result.response.text().trim();
@@ -86,4 +86,12 @@ Example format: ["Question 1?", "Question 2?"]`
   return JSON.parse(jsonStr);
 }
 
-module.exports = { evaluateResponse, generateQuestions, EDEXCEL_THEMES };
+async function translateQuestion(question) {
+  const model = genAI.getGenerativeModel({ model: MODEL });
+  const result = await model.generateContent(
+    `Translate this French question into natural English. Return ONLY the English translation, no other text.\n\nFrench: ${question}`
+  );
+  return result.response.text().trim();
+}
+
+module.exports = { evaluateResponse, generateQuestions, translateQuestion, EDEXCEL_THEMES };

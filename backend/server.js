@@ -52,6 +52,7 @@ app.use('/api/tts', require('./routes/tts'));
 app.use('/api/transcribe', require('./routes/transcribe'));
 app.use('/api/evaluate', require('./routes/evaluate'));
 app.use('/api/generate-questions', require('./routes/generateQuestions'));
+app.use('/api/translate', require('./routes/translate'));
 
 // ---------------------------------------------------------------------------
 // Start server (only when not required by tests — avoids port conflicts)

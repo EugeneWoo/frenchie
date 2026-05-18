@@ -109,7 +109,7 @@ function newQuestion() {
     translationEl.textContent = currentQuestion.translation || '';
     translationEl.hidden = true;
     translationBtn.textContent = 'Show English translation of question';
-    translationBtn.hidden = !currentQuestion.translation;
+    translationBtn.hidden = false;
   }
 
   // Clear the feedback panel
@@ -575,12 +575,33 @@ if (typeof document !== 'undefined') {
       modeSpeechBtn.setAttribute('aria-pressed', 'false');
     }
 
-    // Translation toggle
+    // Translation toggle — lazy-fetch if translation not pre-populated
     const translationToggleBtn = document.getElementById('translation-toggle-btn');
     if (translationToggleBtn) {
-      translationToggleBtn.addEventListener('click', function () {
+      translationToggleBtn.addEventListener('click', async function () {
         const translationEl = document.getElementById('translation-text');
         if (!translationEl) return;
+
+        // If showing and translation missing, fetch it first
+        if (translationEl.hidden && !currentQuestion.translation) {
+          translationToggleBtn.textContent = 'Translating…';
+          translationToggleBtn.disabled = true;
+          try {
+            const res = await apiFetch('/api/translate', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ question: currentQuestion.q }),
+            });
+            const data = await res.json();
+            currentQuestion.translation = data.translation || '';
+            translationEl.textContent = currentQuestion.translation;
+          } catch (_) {
+            currentQuestion.translation = '';
+          } finally {
+            translationToggleBtn.disabled = false;
+          }
+        }
+
         const hidden = translationEl.hidden;
         translationEl.hidden = !hidden;
         translationToggleBtn.textContent = hidden ? 'Hide translation' : 'Show English translation of question';
