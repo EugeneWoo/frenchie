@@ -1,0 +1,27 @@
+task_groups:
+  - name: group-a-foundation
+    claude_code_subagent: implementer
+  - name: group-b1-tts-elevenlabs
+    claude_code_subagent: implementer
+  - name: group-b2-transcribe-whisper
+    claude_code_subagent: implementer
+  - name: group-b3-evaluate-claude
+    claude_code_subagent: implementer
+  - name: group-b4-generate-questions-claude
+    claude_code_subagent: implementer
+  - name: group-c1-question-bank-core-loop
+    claude_code_subagent: implementer
+  - name: group-c2-audio-recording-tts
+    claude_code_subagent: implementer
+  - name: group-c3-excel-upload
+    claude_code_subagent: implementer
+  - name: group-c4-ai-theme-mode
+    claude_code_subagent: implementer
+  - name: group-c5-history-panel
+    claude_code_subagent: implementer
+  - name: group-d1-skeuomorphic-styling
+    claude_code_subagent: implementer
+  - name: group-d2-integration-wiring
+    claude_code_subagent: implementer
+  - name: group-d3-test-review-verification
+    claude_code_subagent: implementer

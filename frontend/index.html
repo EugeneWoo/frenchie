@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Frenchie — GCSE French Oral Practice</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <!-- SheetJS for Excel upload (C3) -->
+  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+
+  <!-- ======================================================= -->
+  <!-- HEADER                                                    -->
+  <!-- ======================================================= -->
+  <header class="site-header">
+    <div class="header-inner">
+      <h1 class="wordmark">Frenchie</h1>
+      <div class="header-actions">
+        <!-- Mode indicator — updated by core.js, excel.js, themes.js -->
+        <span id="mode-indicator" class="mode-indicator">Practising with 30 seeded questions</span>
+        <!-- History panel toggle — implemented by history.js -->
+        <button id="history-toggle-btn" class="btn btn-secondary" type="button" aria-label="Open practice history">
+          History
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ======================================================= -->
+  <!-- MAIN CONTENT                                              -->
+  <!-- ======================================================= -->
+  <main class="main-content">
+
+    <!-- -------- Question Card -------------------------------- -->
+    <section class="question-card" aria-labelledby="question-text">
+      <p id="question-text" class="question-text" aria-live="polite">
+        Press "New Question" to begin.
+      </p>
+      <!-- TTS replay button — implemented by audio.js -->
+      <button id="audio-replay-btn" class="btn btn-audio" type="button" aria-label="Replay question audio" hidden>
+        &#9654; Replay
+      </button>
+      <!-- Inline TTS error — shown by audio.js on failure -->
+      <p id="tts-error" class="inline-error" hidden></p>
+    </section>
+
+    <!-- -------- Mode Toggle ---------------------------------- -->
+    <div class="mode-toggle" role="group" aria-label="Response mode">
+      <button id="mode-text-btn" class="btn btn-mode active" type="button" data-mode="text">
+        Text Response
+      </button>
+      <button id="mode-speech-btn" class="btn btn-mode" type="button" data-mode="speech">
+        Speech Response
+      </button>
+    </div>
+
+    <!-- -------- Response Area ------------------------------- -->
+    <section class="response-area">
+      <!-- Text mode input -->
+      <textarea
+        id="response-textarea"
+        class="response-textarea"
+        placeholder="Type your French answer here…"
+        rows="5"
+        aria-label="Type your French answer"
+      ></textarea>
+
+      <!-- Speech mode display — hidden by default -->
+      <div id="speech-display" class="speech-display" hidden>
+        <p class="speech-display-label">Your transcribed answer:</p>
+        <p class="speech-transcript" id="speech-transcript-text" aria-live="polite"></p>
+        <!-- Inline transcription error — shown by audio.js on failure -->
+        <p id="transcribe-error" class="inline-error" hidden></p>
+      </div>
+
+      <!-- Record button — implemented by audio.js -->
+      <button id="record-btn" class="btn btn-record" type="button" aria-label="Start recording" hidden>
+        <span class="record-icon">&#9679;</span> Record
+      </button>
+    </section>
+
+    <!-- -------- Action Buttons ------------------------------ -->
+    <div class="action-buttons">
+      <button id="new-question-btn" class="btn btn-primary" type="button">
+        New Question
+      </button>
+      <button id="submit-btn" class="btn btn-primary" type="button" hidden>
+        Submit Answer
+      </button>
+      <button id="clear-btn" class="btn btn-danger" type="button">
+        Clear History
+      </button>
+    </div>
+
+    <!-- Inline submit error -->
+    <p id="submit-error" class="inline-error" hidden></p>
+
+    <!-- -------- Feedback Panel ------------------------------ -->
+    <section id="feedback-panel" class="feedback-panel" hidden aria-label="AI Feedback">
+      <h2 class="feedback-heading">Feedback</h2>
+
+      <!-- Scores row -->
+      <div class="scores-row">
+        <div class="score-block">
+          <span class="score-label">Overall</span>
+          <span id="score-overall" class="score-badge" aria-label="Overall score">—</span>
+        </div>
+        <div class="score-block">
+          <span class="score-label">Communication</span>
+          <span id="score-communication" class="score-badge" aria-label="Communication score">—</span>
+        </div>
+        <div class="score-block">
+          <span class="score-label">Range &amp; Accuracy</span>
+          <span id="score-range" class="score-badge" aria-label="Range and accuracy score">—</span>
+        </div>
+      </div>
+
+      <!-- Section: Raw Response -->
+      <div class="feedback-section" id="section-raw">
+        <h3 class="feedback-label">Your Response</h3>
+        <p id="feedback-raw-response" class="feedback-text"></p>
+      </div>
+
+      <!-- Section: Corrected Answer -->
+      <div class="feedback-section" id="section-corrected">
+        <h3 class="feedback-label">Corrected Answer</h3>
+        <p id="feedback-corrected" class="feedback-text"></p>
+      </div>
+
+      <!-- Section: Model Answer -->
+      <div class="feedback-section" id="section-model">
+        <h3 class="feedback-label">Model Answer</h3>
+        <p id="feedback-model" class="feedback-text"></p>
+      </div>
+
+      <!-- Section: Comments -->
+      <div class="feedback-section" id="section-comments">
+        <h3 class="feedback-label">Examiner Comments</h3>
+        <p id="feedback-comments" class="feedback-text"></p>
+      </div>
+
+      <!-- Section: Progress vs last attempt — shown only when progressComparison present -->
+      <div class="feedback-section" id="feedback-progress" hidden>
+        <h3 class="feedback-label">Progress vs Last Attempt</h3>
+        <p id="feedback-progress-text" class="feedback-text"></p>
+      </div>
+    </section>
+
+    <!-- -------- Excel Upload Zone (C3) ---------------------- -->
+    <section class="upload-section" aria-label="Upload custom questions">
+      <div id="excel-upload-zone" class="excel-upload-zone" role="region" aria-label="Excel file upload area">
+        <p class="upload-hint">Upload a custom question sheet (.xlsx)</p>
+        <input
+          id="excel-file-input"
+          type="file"
+          accept=".xlsx,.xls"
+          class="file-input"
+          aria-label="Choose Excel file"
+        />
+        <label for="excel-file-input" class="btn btn-secondary upload-label">Choose File</label>
+        <p id="upload-error" class="inline-error" hidden></p>
+        <p id="upload-success" class="upload-success" hidden></p>
+        <button id="return-to-default-btn" class="btn btn-link" type="button" hidden>
+          Return to default questions
+        </button>
+      </div>
+    </section>
+
+    <!-- -------- Theme Selector (C4) ------------------------- -->
+    <section class="theme-section" aria-label="AI theme question generation">
+      <h2 class="section-heading">Generate Questions by Topic</h2>
+      <div id="theme-selector" class="theme-selector" role="group" aria-label="Select a topic theme">
+        <button class="btn btn-theme" type="button" data-theme="home-abroad">Home &amp; Abroad</button>
+        <button class="btn btn-theme" type="button" data-theme="education-employment">Education &amp; Employment</button>
+        <button class="btn btn-theme" type="button" data-theme="personal-life">Personal Life</button>
+        <button class="btn btn-theme" type="button" data-theme="world-around-us">The World Around Us</button>
+        <button class="btn btn-theme" type="button" data-theme="social-activities">Social Activities</button>
+        <button class="btn btn-theme" type="button" data-theme="fitness-health">Fitness &amp; Health</button>
+      </div>
+      <p id="theme-error" class="inline-error" hidden></p>
+    </section>
+
+  </main>
+
+  <!-- ======================================================= -->
+  <!-- HISTORY SLIDE-OUT PANEL (C5)                             -->
+  <!-- ======================================================= -->
+  <aside id="history-panel" class="history-panel" aria-label="Practice history" aria-hidden="true">
+    <div class="history-panel-inner">
+      <div class="history-panel-header">
+        <h2 class="history-panel-title">Practice History</h2>
+        <button id="history-close-btn" class="btn btn-icon" type="button" aria-label="Close history panel">
+          &times;
+        </button>
+      </div>
+      <div id="history-list" class="history-list">
+        <p class="history-empty">No practice history yet.</p>
+      </div>
+    </div>
+  </aside>
+  <!-- Overlay backdrop for history panel -->
+  <div id="history-overlay" class="history-overlay" hidden></div>
+
+  <!-- Hidden TTS audio element — managed by audio.js -->
+  <audio id="tts-audio" style="display:none"></audio>
+
+  <!-- ======================================================= -->
+  <!-- SCRIPTS — load order matters                             -->
+  <!-- ======================================================= -->
+  <script src="data.js"></script>
+  <script src="core.js"></script>
+  <script src="audio.js"></script>
+  <script src="excel.js"></script>
+  <script src="themes.js"></script>
+  <script src="history.js"></script>
+
+</body>
+</html>

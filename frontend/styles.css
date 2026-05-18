@@ -1,0 +1,927 @@
+/* Frenchie — GCSE French Oral Practice */
+/* frontend/styles.css */
+
+/* ===========================================================================
+   1. DESIGN TOKENS
+   =========================================================================== */
+
+:root {
+  --bg-cream: #FAF7F0;
+  --french-blue: #0055A4;
+  --french-red: #EF4135;
+  --ink: #2C2C2C;
+  --parchment-dark: #EDE7D9;
+  --shadow-raised: 2px 4px 8px rgba(0, 0, 0, 0.15);
+  --shadow-inset: inset 1px 2px 4px rgba(0, 0, 0, 0.2);
+  --radius: 6px;
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+}
+
+/* ===========================================================================
+   2. GLOBAL RESET & BASE
+   =========================================================================== */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-body);
+  color: var(--ink);
+  background-color: var(--bg-cream);
+  line-height: 1.6;
+  min-height: 100vh;
+  position: relative;
+}
+
+/* Subtle paper texture via repeating-linear-gradient */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 47px,
+      rgba(0, 0, 0, 0.025) 47px,
+      rgba(0, 0, 0, 0.025) 48px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 47px,
+      rgba(0, 0, 0, 0.012) 47px,
+      rgba(0, 0, 0, 0.012) 48px
+    );
+}
+
+body > * {
+  position: relative;
+  z-index: 1;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  line-height: 1.2;
+}
+
+img, svg {
+  display: block;
+  max-width: 100%;
+}
+
+button {
+  font-family: var(--font-body);
+}
+
+/* ===========================================================================
+   3. HEADER
+   =========================================================================== */
+
+.site-header {
+  background: #ffffff;
+  border-bottom: 2px solid var(--french-blue);
+  padding: 0.75rem 1.5rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 800px;
+  margin: 0 auto;
+  gap: 1rem;
+}
+
+.wordmark {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 2rem;
+  color: var(--french-blue);
+  letter-spacing: -0.02em;
+  user-select: none;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.mode-indicator {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--ink);
+  background: var(--parchment-dark);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 999px;
+  padding: 0.25rem 0.75rem;
+  white-space: nowrap;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ===========================================================================
+   4. MAIN CONTENT LAYOUT
+   =========================================================================== */
+
+.main-content {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 1.5rem 1.5rem 4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* ===========================================================================
+   5. QUESTION CARD
+   =========================================================================== */
+
+.question-card {
+  background: #FFFEF8;
+  border-radius: 8px;
+  box-shadow: var(--shadow-raised);
+  padding: 2rem;
+  text-align: center;
+  /* Faint ruled lines */
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent,
+    transparent 1.49rem,
+    rgba(0, 0, 85, 0.04) 1.49rem,
+    rgba(0, 0, 85, 0.04) 1.5rem
+  );
+}
+
+.question-text {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  color: var(--ink);
+  line-height: 1.55;
+  margin-bottom: 1rem;
+}
+
+/* ===========================================================================
+   6. BUTTONS — BASE & SKEUOMORPHIC RAISED/PRESSED
+   =========================================================================== */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4em;
+  padding: 0.55rem 1.15rem;
+  border: none;
+  border-radius: var(--radius);
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: box-shadow 0.1s ease, transform 0.1s ease, background 0.15s ease;
+  box-shadow: var(--shadow-raised);
+  text-decoration: none;
+  white-space: nowrap;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn:active {
+  box-shadow: var(--shadow-inset);
+  transform: translateY(1px);
+}
+
+.btn:disabled,
+.btn[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Primary — French blue */
+.btn-primary {
+  background: var(--french-blue);
+  color: #ffffff;
+}
+
+.btn-primary:hover {
+  background: #004a90;
+}
+
+/* Danger — French red */
+.btn-danger {
+  background: var(--french-red);
+  color: #ffffff;
+}
+
+.btn-danger:hover {
+  background: #d43a2a;
+}
+
+/* Secondary — cream with ink border */
+.btn-secondary {
+  background: var(--bg-cream);
+  color: var(--ink);
+  border: 1px solid rgba(44, 44, 44, 0.35);
+}
+
+.btn-secondary:hover {
+  background: var(--parchment-dark);
+}
+
+/* Audio button — small circular French blue */
+.btn-audio {
+  background: var(--french-blue);
+  color: #ffffff;
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  font-size: 0.75rem;
+  box-shadow: var(--shadow-raised);
+}
+
+.btn-audio:hover {
+  background: #004a90;
+}
+
+/* Link-style button */
+.btn-link {
+  background: none;
+  border: none;
+  box-shadow: none;
+  color: var(--french-blue);
+  text-decoration: underline;
+  font-size: 0.85rem;
+  padding: 0.25rem 0;
+}
+
+.btn-link:active {
+  box-shadow: none;
+  transform: none;
+}
+
+.btn-link:hover {
+  color: #003d7a;
+}
+
+/* Icon button (close × etc.) */
+.btn-icon {
+  background: none;
+  border: none;
+  box-shadow: none;
+  font-size: 1.5rem;
+  line-height: 1;
+  padding: 0.2rem 0.4rem;
+  color: var(--ink);
+  border-radius: var(--radius);
+}
+
+.btn-icon:active {
+  box-shadow: none;
+  transform: none;
+}
+
+.btn-icon:hover {
+  background: rgba(0, 0, 0, 0.07);
+}
+
+/* Record button */
+.btn-record {
+  width: 100%;
+  background: var(--bg-cream);
+  color: var(--ink);
+  border: 1px solid rgba(44, 44, 44, 0.3);
+  padding: 0.65rem 1.25rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.btn-record.recording {
+  background: #C0392B;
+  color: #ffffff;
+  border-color: #C0392B;
+  animation: pulse-record 1.2s ease-in-out infinite;
+}
+
+.btn-record.processing {
+  background: #a0a0a0;
+  color: #ffffff;
+  border-color: #a0a0a0;
+  cursor: not-allowed;
+}
+
+@keyframes pulse-record {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(192, 57, 43, 0.5); }
+  50%       { box-shadow: 0 0 0 8px rgba(192, 57, 43, 0); }
+}
+
+/* ===========================================================================
+   7. MODE TOGGLE (Text / Speech — tab metaphor)
+   =========================================================================== */
+
+.mode-toggle {
+  display: inline-flex;
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-raised);
+  align-self: flex-start;
+}
+
+.btn-mode {
+  background: #e8e2d9;
+  color: #888;
+  border: none;
+  border-right: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 0;
+  padding: 0.5rem 1.1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  box-shadow: var(--shadow-inset);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.1s ease;
+}
+
+.btn-mode:last-child {
+  border-right: none;
+}
+
+.btn-mode.active {
+  background: #ffffff;
+  color: var(--french-blue);
+  font-weight: 600;
+  box-shadow: var(--shadow-raised);
+  z-index: 1;
+  position: relative;
+}
+
+.btn-mode:active {
+  box-shadow: var(--shadow-inset);
+  transform: none;
+}
+
+/* ===========================================================================
+   8. RESPONSE AREA
+   =========================================================================== */
+
+.response-area {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.response-textarea {
+  width: 100%;
+  min-height: 120px;
+  resize: vertical;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  color: var(--ink);
+  background: #ffffff;
+  border: 1px solid #d0cac0;
+  border-radius: var(--radius);
+  padding: 0.75rem 0.9rem;
+  line-height: 1.6;
+  box-shadow: var(--shadow-inset);
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.response-textarea:focus {
+  border-color: var(--french-blue);
+  box-shadow: var(--shadow-inset), 0 0 0 3px rgba(0, 85, 164, 0.12);
+}
+
+.speech-display {
+  background: #f5f5f2;
+  border: 1px solid #d0cac0;
+  border-radius: var(--radius);
+  padding: 0.75rem 0.9rem;
+  min-height: 120px;
+  box-shadow: var(--shadow-inset);
+}
+
+.speech-display-label {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: rgba(44, 44, 44, 0.6);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.4rem;
+}
+
+.speech-transcript {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--ink);
+  font-style: italic;
+}
+
+/* ===========================================================================
+   9. ACTION BUTTONS ROW
+   =========================================================================== */
+
+.action-buttons {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+/* ===========================================================================
+   10. FEEDBACK PANEL
+   =========================================================================== */
+
+.feedback-panel {
+  background: var(--bg-cream);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  box-shadow: var(--shadow-raised);
+  padding: 1.5rem;
+}
+
+.feedback-heading {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--parchment-dark);
+}
+
+/* Scores row */
+.scores-row {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.25rem;
+}
+
+.score-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.score-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgba(44, 44, 44, 0.65);
+}
+
+/* Score badge — wax-seal style */
+.score-badge {
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #ffffff;
+  background: #aaa;
+  /* Wax-seal outer ring */
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.6),
+              0 0 0 5px rgba(0, 0, 0, 0.15),
+              0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+/* Band colour classes */
+.badge-red,
+.band-low {
+  background: #C0392B;
+}
+
+.badge-amber,
+.band-mid {
+  background: #E67E22;
+}
+
+.badge-green,
+.band-high {
+  background: #27AE60;
+}
+
+/* Feedback sections */
+.feedback-section {
+  padding: 0.85rem 0;
+  border-bottom: 1px dashed rgba(0, 0, 0, 0.15);
+}
+
+.feedback-section:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.feedback-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgba(44, 44, 44, 0.6);
+  margin-bottom: 0.4rem;
+}
+
+.feedback-text {
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--ink);
+}
+
+/* ===========================================================================
+   11. THEME SELECTOR
+   =========================================================================== */
+
+.theme-section {
+  margin-top: 0.5rem;
+}
+
+.section-heading {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 0.75rem;
+}
+
+.theme-selector {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.6rem;
+}
+
+/* Desktop: 3 columns */
+@media (min-width: 600px) {
+  .theme-selector {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.btn-theme {
+  background: var(--bg-cream);
+  color: var(--ink);
+  border: 1px solid rgba(44, 44, 44, 0.25);
+  box-shadow: var(--shadow-raised);
+  font-size: 0.82rem;
+  padding: 0.5rem 0.7rem;
+  text-align: center;
+  line-height: 1.35;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.btn-theme:hover {
+  background: var(--parchment-dark);
+}
+
+.btn-theme.active {
+  background: var(--french-blue);
+  color: #ffffff;
+  border-color: var(--french-blue);
+}
+
+.btn-theme:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* ===========================================================================
+   12. EXCEL UPLOAD ZONE
+   =========================================================================== */
+
+.upload-section {
+  margin-top: 0.5rem;
+}
+
+.excel-upload-zone {
+  border: 2px dashed #d0cac0;
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  text-align: center;
+  background: #ffffff;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.excel-upload-zone.drag-over {
+  border-color: var(--french-blue);
+  background: rgba(0, 85, 164, 0.04);
+}
+
+.upload-hint {
+  font-size: 0.85rem;
+  color: rgba(44, 44, 44, 0.6);
+  margin-bottom: 0.75rem;
+}
+
+/* Hide the raw file input — trigger via the label */
+.file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.upload-label {
+  display: inline-flex;
+  cursor: pointer;
+}
+
+.upload-success {
+  font-size: 0.85rem;
+  color: #27AE60;
+  margin-top: 0.5rem;
+}
+
+/* ===========================================================================
+   13. HISTORY SLIDE-OUT PANEL (supplements C5 base styles)
+   =========================================================================== */
+
+#history-panel {
+  position: fixed;
+  right: 0;
+  top: 0;
+  height: 100vh;
+  width: min(33vw, 480px);
+  min-width: 320px;
+  transform: translateX(100%);
+  transition: transform 0.3s ease;
+  z-index: 100;
+  overflow-y: auto;
+  background: var(--parchment-dark);
+  box-shadow: -4px 0 16px rgba(0, 0, 0, 0.18);
+  /* Subtle paper texture on panel */
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent,
+    transparent 1.49rem,
+    rgba(0, 0, 0, 0.03) 1.49rem,
+    rgba(0, 0, 0, 0.03) 1.5rem
+  );
+}
+
+#history-panel.open {
+  transform: translateX(0);
+}
+
+#history-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99;
+  background: rgba(0, 0, 0, 0.3);
+  display: none;
+}
+
+#history-overlay.visible {
+  display: block;
+}
+
+.history-panel-inner {
+  padding: 1rem 1.25rem;
+}
+
+.history-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  padding-bottom: 0.5rem;
+}
+
+.history-panel-title {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+/* History list */
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.history-entry {
+  background: #ffffff;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 0.75rem 0.65rem;
+  border-radius: 4px;
+  margin-bottom: 0.35rem;
+}
+
+.history-entry:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.history-entry-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+  flex-wrap: wrap;
+}
+
+/* Compact score badge inside history */
+.history-entry .score-badge {
+  width: 36px;
+  height: 36px;
+  font-size: 0.95rem;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.6),
+              0 0 0 3px rgba(0, 0, 0, 0.12),
+              0 1px 4px rgba(0, 0, 0, 0.2);
+}
+
+.history-timestamp {
+  font-size: 0.7rem;
+  color: rgba(0, 0, 0, 0.5);
+  margin-left: auto;
+}
+
+.history-question {
+  font-size: 0.85rem;
+  font-weight: 700;
+  margin: 0 0 0.25rem;
+  line-height: 1.4;
+  color: var(--ink);
+}
+
+.history-response {
+  font-size: 0.82rem;
+  font-style: italic;
+  color: rgba(44, 44, 44, 0.7);
+  margin: 0 0 0.25rem;
+  line-height: 1.4;
+}
+
+.history-comments {
+  font-size: 0.78rem;
+  color: rgba(44, 44, 44, 0.6);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.history-empty {
+  text-align: center;
+  color: rgba(44, 44, 44, 0.45);
+  font-size: 0.9rem;
+  padding: 2.5rem 0;
+  font-style: italic;
+}
+
+/* Expand toggle */
+.btn-expand {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 0.78rem;
+  color: var(--french-blue);
+  cursor: pointer;
+  text-decoration: underline;
+  font-weight: 500;
+  box-shadow: none;
+}
+
+.btn-expand:hover {
+  color: #003d7a;
+}
+
+.btn-expand:active {
+  box-shadow: none;
+  transform: none;
+}
+
+/* ===========================================================================
+   14. DELTA BADGES (history panel repeat attempts)
+   =========================================================================== */
+
+.delta-badge {
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.delta-up {
+  background: #27AE60;
+  color: #ffffff;
+}
+
+.delta-down {
+  background: #C0392B;
+  color: #ffffff;
+}
+
+/* ===========================================================================
+   15. INLINE ERRORS
+   =========================================================================== */
+
+.inline-error {
+  font-size: 0.8rem;
+  color: var(--french-red);
+  margin-top: 0.35rem;
+  line-height: 1.4;
+}
+
+/* ===========================================================================
+   16. UTILITIES
+   =========================================================================== */
+
+.hidden {
+  display: none;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+/* ===========================================================================
+   17. RESPONSIVE LAYOUT
+   =========================================================================== */
+
+/* Mobile — default (< 768px): single column, full width */
+.main-content {
+  max-width: 100%;
+  padding: 1rem 1rem 4rem;
+}
+
+/* Tablet: 768px – 1024px */
+@media (min-width: 768px) {
+  .main-content {
+    max-width: 700px;
+    padding: 1.5rem 1.5rem 4rem;
+  }
+
+  #history-panel {
+    width: min(33vw, 480px);
+  }
+}
+
+/* Desktop: > 1024px */
+@media (min-width: 1025px) {
+  .main-content {
+    max-width: 800px;
+    padding: 2rem 1.5rem 4rem;
+  }
+
+  .header-inner {
+    max-width: 800px;
+  }
+
+  #history-panel {
+    width: min(33vw, 480px);
+  }
+}
+
+/* Mobile history panel width */
+@media (max-width: 767px) {
+  #history-panel {
+    width: min(320px, 90vw);
+    min-width: 0;
+  }
+
+  .theme-selector {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .scores-row {
+    gap: 1rem;
+  }
+
+  .wordmark {
+    font-size: 1.5rem;
+  }
+
+  .mode-indicator {
+    display: none;
+  }
+}
