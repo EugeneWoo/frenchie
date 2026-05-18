@@ -1,0 +1,7 @@
+{
+  "database": "dolt",
+  "backend": "dolt",
+  "dolt_mode": "embedded",
+  "dolt_database": "frenchie",
+  "project_id": "b3eec00c-c5fb-4976-812b-b44136b0fe35"
+}

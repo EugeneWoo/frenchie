@@ -154,6 +154,7 @@
     <section class="upload-section" aria-label="Upload custom questions">
       <div id="excel-upload-zone" class="excel-upload-zone" role="region" aria-label="Excel file upload area">
         <p class="upload-hint">Upload a custom question sheet (.xlsx)</p>
+        <p class="upload-columns-hint">Column A: <strong>Question</strong> &nbsp;|&nbsp; Column B: <strong>Answer</strong> <em>(omit for AI-judged scoring)</em></p>
         <input
           id="excel-file-input"
           type="file"
@@ -172,7 +173,7 @@
 
     <!-- -------- Theme Selector (C4) ------------------------- -->
     <section class="theme-section" aria-label="AI theme question generation">
-      <h2 class="section-heading">Generate Questions by Topic</h2>
+      <h2 class="section-heading">Generate a Random Question by Topic</h2>
       <div id="theme-selector" class="theme-selector" role="group" aria-label="Select a topic theme">
         <button class="btn btn-theme" type="button" data-theme="home-abroad">Home &amp; Abroad</button>
         <button class="btn btn-theme" type="button" data-theme="education-employment">Education &amp; Employment</button>

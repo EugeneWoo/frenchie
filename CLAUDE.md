@@ -22,7 +22,7 @@ frontend/
   app.js          # Shared API fetch helper (apiFetch); loaded before all modules
   data.js         # Shared data contract: SEEDED_QUESTIONS (30 Q&As), typedefs
   core.js         # Core UI loop, evaluate flow, feedback panel (C1)
-  audio.js        # TTS playback (browser speechSynthesis, fr-FR) + MediaRecorder transcription (C2)
+  audio.js        # TTS playback (fetch /api/tts → msedge-tts, blob URL cached) + MediaRecorder transcription (C2)
   excel.js        # Excel upload mode — SheetJS parsing, drag-drop (C3)
   themes.js       # AI theme mode — topic picker, question generation (C4)
   history.js      # History slide-out panel, localStorage persistence (C5)
@@ -63,10 +63,10 @@ tests/
 - `.env` is gitignored; `.env.example` (with comments) is committed as the canonical reference for Railway env vars.
 - `node-fetch` v2 (CommonJS) is used — v3 is ESM-only and would require `"type": "module"` in package.json, which conflicts with the CommonJS route files.
 - **Frontend module split (Phase C)**: each C-group owns a separate `.js` file (`data.js`, `core.js`, `audio.js`, `excel.js`, `themes.js`, `history.js`). `data.js` is loaded first and provides `SEEDED_QUESTIONS` as a global.
-- **C3 excel.js**: SheetJS is loaded via CDN (`https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js`) in `index.html` before `excel.js`. The module exports `parseAndLoad(arrayBuffer, filename)` for direct test use. Error display supports both `#excel-error` (test DOM) and `#upload-error` (production HTML) element IDs. Tests use `@jest-environment jsdom` docblock.
+- **C3 excel.js**: SheetJS is loaded via CDN (`https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js`) in `index.html` before `excel.js`. The module exports `parseAndLoad(arrayBuffer, filename)` for direct test use. Error display supports both `#excel-error` (test DOM) and `#upload-error` (production HTML) element IDs. Tests use `@jest-environment jsdom` docblock. Upload zone shows column hint: Column A = Question, Column B = Answer (omit for AI-judged scoring).
 - **jest test environments**: backend tests use the default `node` environment. Frontend tests require `@jest-environment jsdom` docblock at the top of each test file since the global jest config sets `testEnvironment: "node"`.
-- **TTS: browser speechSynthesis** — `audio.js` uses `window.speechSynthesis` (lang `fr-FR`, rate 0.9) instead of ElevenLabs TTS. ElevenLabs free tier blocks library voices via API. `ELEVENLABS_VOICE_ID` env var is no longer used by the backend (TTS route still exists but frontend no longer calls it). STT still uses ElevenLabs Scribe (`scribe_v2`) via `/api/transcribe`.
-- **ElevenLabs Scribe model**: `stt.js` uses `scribe_v2` (updated from `scribe_v1`).
+- **TTS: msedge-tts** — `backend/services/edge-tts.js` uses `msedge-tts` npm package (`fr-FR-DeniseNeural`, `AUDIO_24KHZ_48KBITRATE_MONO_MP3`). ElevenLabs free tier blocks all voices via API. `ELEVENLABS_VOICE_ID` env var is obsolete. Frontend `audio.js` calls `/api/tts` and caches blob URL for replay. No API key needed for TTS.
+- **STT: ElevenLabs Scribe v2** — `stt.js` uses `scribe_v2` via `POST https://api.elevenlabs.io/v1/speech-to-text`. Single `ELEVENLABS_API_KEY` covers STT only now.
 
 ### D2 Cross-Module Wiring Contract (DO NOT CHANGE without updating all callers)
 

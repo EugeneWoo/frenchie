@@ -633,7 +633,14 @@ button {
 .upload-hint {
   font-size: 0.85rem;
   color: rgba(44, 44, 44, 0.6);
+  margin-bottom: 0.25rem;
+}
+
+.upload-columns-hint {
+  font-size: 0.78rem;
+  color: rgba(44, 44, 44, 0.5);
   margin-bottom: 0.75rem;
+  font-family: 'Inter', sans-serif;
 }
 
 /* Hide the raw file input — trigger via the label */
