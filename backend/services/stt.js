@@ -14,7 +14,7 @@ const FormData = require('form-data');
 async function transcribe(audioBuffer, mimeType, filename = 'audio.webm') {
   const form = new FormData();
   form.append('file', audioBuffer, { filename, contentType: mimeType });
-  form.append('model_id', 'scribe_v1');
+  form.append('model_id', 'scribe_v2');
   form.append('language_code', 'fr');
 
   const response = await fetch('https://api.elevenlabs.io/v1/speech-to-text', {

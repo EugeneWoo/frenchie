@@ -23,7 +23,7 @@
 // ---------------------------------------------------------------------------
 // Module-level state
 // ---------------------------------------------------------------------------
-let currentAudioUrl = null;   // blob: URL cached after first TTS fetch
+let lastSpokenText = null;    // text cached for replay via speechSynthesis
 let currentTranscript = '';   // last successful transcript
 let mediaRecorder = null;     // active MediaRecorder instance
 let audioChunks = [];         // audio data collected while recording
@@ -32,17 +32,6 @@ let isRecording = false;      // track recording state
 // ---------------------------------------------------------------------------
 // DOM helpers — accessed lazily so tests can build the DOM before importing
 // ---------------------------------------------------------------------------
-function getAudioEl() {
-  let el = document.getElementById('tts-audio');
-  if (!el) {
-    el = document.createElement('audio');
-    el.id = 'tts-audio';
-    el.style.display = 'none';
-    document.body.appendChild(el);
-  }
-  return el;
-}
-
 function getTtsErrorEl() {
   return document.getElementById('tts-error');
 }
@@ -150,73 +139,58 @@ function hideTranscribeError() {
 // ---------------------------------------------------------------------------
 // playQuestionAudio(text)
 //
-// POSTs text to /api/tts, creates a blob URL, plays via #tts-audio.
+// Speaks text via browser speechSynthesis with lang fr-FR.
 // On failure: shows inline error, does NOT throw.
-// Shows #audio-replay-btn after the first successful TTS call.
+// Shows #audio-replay-btn after the first successful speech call.
 // ---------------------------------------------------------------------------
 async function playQuestionAudio(text) {
   hideTtsError();
+  lastSpokenText = text;
 
-  // Revoke old blob URL to free memory
-  if (currentAudioUrl) {
-    URL.revokeObjectURL(currentAudioUrl);
-    currentAudioUrl = null;
+  if (typeof window === 'undefined' || !window.speechSynthesis) {
+    showTtsError('Audio unavailable — please read the question above.');
+    return;
   }
 
-  try {
-    const res = await fetch('/api/tts', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text }),
-    });
+  window.speechSynthesis.cancel();
 
-    if (!res.ok) {
-      throw new Error(`TTS request failed with status ${res.status}`);
-    }
+  return new Promise((resolve) => {
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'fr-FR';
+    utterance.rate = 0.9;
 
-    const blob = await res.blob();
-    const blobUrl = URL.createObjectURL(blob);
-    currentAudioUrl = blobUrl;
-
-    const audio = getAudioEl();
-    audio.src = blobUrl;
-
-    // Show replay button now that we have audio — hidden on load, shown here
     const replayBtn = getReplayBtn();
     if (replayBtn) {
       replayBtn.hidden = false;
-      replayBtn.disabled = true; // disable while playing; re-enabled on ended
+      replayBtn.disabled = true;
     }
-    audio.onended = () => {
+
+    utterance.onend = () => {
       if (replayBtn) replayBtn.disabled = false;
+      resolve();
     };
 
-    await audio.play();
-  } catch (err) {
-    showTtsError('Audio unavailable — please read the question above.');
-  }
+    utterance.onerror = (e) => {
+      // 'interrupted' fires when cancel() is called — not a real error
+      if (e.error !== 'interrupted') {
+        showTtsError('Audio unavailable — please read the question above.');
+      }
+      if (replayBtn) replayBtn.disabled = false;
+      resolve();
+    };
+
+    window.speechSynthesis.speak(utterance);
+  });
 }
 
 // ---------------------------------------------------------------------------
 // replayAudio()
 //
-// Replays stored audio without re-fetching. No-op if no URL stored.
+// Re-speaks the last question via speechSynthesis. No-op if nothing spoken yet.
 // ---------------------------------------------------------------------------
 function replayAudio() {
-  if (!currentAudioUrl) return;
-
-  const audio = getAudioEl();
-  const replayBtn = getReplayBtn();
-
-  if (replayBtn) replayBtn.disabled = true;
-  audio.onended = () => {
-    if (replayBtn) replayBtn.disabled = false;
-  };
-
-  audio.currentTime = 0;
-  audio.play().catch(() => {
-    // Ignore play errors in non-interactive contexts (tests, etc.)
-  });
+  if (!lastSpokenText) return;
+  playQuestionAudio(lastSpokenText);
 }
 
 // ---------------------------------------------------------------------------

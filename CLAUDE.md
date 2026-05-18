@@ -19,9 +19,10 @@ Phase A complete. Phase B complete. Phase C complete. D1 complete. D2 complete. 
 ```
 frontend/
   index.html      # Entry point, served at GET /
+  app.js          # Shared API fetch helper (apiFetch); loaded before all modules
   data.js         # Shared data contract: SEEDED_QUESTIONS (30 Q&As), typedefs
   core.js         # Core UI loop, evaluate flow, feedback panel (C1)
-  audio.js        # TTS playback + MediaRecorder transcription (C2)
+  audio.js        # TTS playback (browser speechSynthesis, fr-FR) + MediaRecorder transcription (C2)
   excel.js        # Excel upload mode — SheetJS parsing, drag-drop (C3)
   themes.js       # AI theme mode — topic picker, question generation (C4)
   history.js      # History slide-out panel, localStorage persistence (C5)
@@ -33,6 +34,12 @@ backend/
     transcribe.js       # POST /api/transcribe — Whisper proxy
     evaluate.js         # POST /api/evaluate — Claude evaluation proxy
     generateQuestions.js # POST /api/generate-questions — Claude generation proxy
+  services/
+    claude.js           # Claude API client (evaluate + generateQuestions logic)
+    elevenlabs.js       # ElevenLabs TTS client
+    stt.js              # ElevenLabs Scribe STT client
+  middleware/
+    upload.js           # multer memoryStorage (shared by transcribe route)
 tests/
   server.test.js          # Backend foundation tests (Jest + supertest)
   evaluate.test.js        # B3 evaluate endpoint tests
@@ -51,13 +58,15 @@ tests/
 
 ### Key Architectural Decisions
 - `backend/server.js` exports `app` without calling `app.listen()` when `require.main !== module` — this allows supertest to import the app cleanly in tests without binding a port.
-- `multer` is initialised with `memoryStorage()` in `server.js` and exposed via `app.locals.upload` for route files to use.
+- `multer` lives in `backend/middleware/upload.js` (memoryStorage); route files `require('../middleware/upload')` directly.
 - CORS: when `FRONTEND_ORIGIN` env var is set, only that exact origin is allowed; when unset (local dev), `origin: '*'` is used. The CORS origin callback rejects non-matching origins silently (no ACAO header returned).
 - `.env` is gitignored; `.env.example` (with comments) is committed as the canonical reference for Railway env vars.
 - `node-fetch` v2 (CommonJS) is used — v3 is ESM-only and would require `"type": "module"` in package.json, which conflicts with the CommonJS route files.
 - **Frontend module split (Phase C)**: each C-group owns a separate `.js` file (`data.js`, `core.js`, `audio.js`, `excel.js`, `themes.js`, `history.js`). `data.js` is loaded first and provides `SEEDED_QUESTIONS` as a global.
 - **C3 excel.js**: SheetJS is loaded via CDN (`https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js`) in `index.html` before `excel.js`. The module exports `parseAndLoad(arrayBuffer, filename)` for direct test use. Error display supports both `#excel-error` (test DOM) and `#upload-error` (production HTML) element IDs. Tests use `@jest-environment jsdom` docblock.
 - **jest test environments**: backend tests use the default `node` environment. Frontend tests require `@jest-environment jsdom` docblock at the top of each test file since the global jest config sets `testEnvironment: "node"`.
+- **TTS: browser speechSynthesis** — `audio.js` uses `window.speechSynthesis` (lang `fr-FR`, rate 0.9) instead of ElevenLabs TTS. ElevenLabs free tier blocks library voices via API. `ELEVENLABS_VOICE_ID` env var is no longer used by the backend (TTS route still exists but frontend no longer calls it). STT still uses ElevenLabs Scribe (`scribe_v2`) via `/api/transcribe`.
+- **ElevenLabs Scribe model**: `stt.js` uses `scribe_v2` (updated from `scribe_v1`).
 
 ### D2 Cross-Module Wiring Contract (DO NOT CHANGE without updating all callers)
 
@@ -87,11 +96,11 @@ tests/
 - `Array<{ response: string, overallScore: number, comments: string }>` — last 3 (capped), oldest first
 
 ### Environment Variables (see `.env.example`)
-- `ELEVENLABS_API_KEY` / `ELEVENLABS_VOICE_ID` — TTS
-- `OPENAI_API_KEY` — Whisper transcription
+- `ELEVENLABS_API_KEY` — TTS (`/api/tts`) AND STT (`/api/transcribe`) via ElevenLabs Scribe — one key covers both
+- `ELEVENLABS_VOICE_ID` — ElevenLabs voice ID for French TTS (pick a French voice from elevenlabs.io/voice-library)
 - `ANTHROPIC_API_KEY` — Claude evaluation + question generation
-- `FRONTEND_ORIGIN` — CORS allowlist (e.g. `https://frenchie.up.railway.app`)
-- `PORT` — server port (Railway sets this automatically)
+- `FRONTEND_ORIGIN` — CORS allowlist (e.g. `https://frenchie.up.railway.app`); set to `http://localhost:PORT` locally
+- `PORT` — server port (Railway sets automatically; locally default 3000; note macOS port 5000 is taken by AirPlay Receiver)
 
 ## Common Commands
 

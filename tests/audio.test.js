@@ -40,74 +40,73 @@ function loadAudioModule() {
 }
 
 // ---------------------------------------------------------------------------
-// Test group 1: playQuestionAudio — TTS fetch + audio element
+// speechSynthesis mock helpers
+// ---------------------------------------------------------------------------
+function mockSpeechSynthesis({ triggerEnd = true, error = null } = {}) {
+  global.SpeechSynthesisUtterance = jest.fn(function (text) {
+    this.text = text;
+    this.lang = '';
+    this.rate = 1;
+    this.onend = null;
+    this.onerror = null;
+  });
+
+  global.speechSynthesis = {
+    speak: jest.fn((utterance) => {
+      Promise.resolve().then(() => {
+        if (error && utterance.onerror) {
+          utterance.onerror({ error });
+        } else if (triggerEnd && utterance.onend) {
+          utterance.onend({});
+        }
+      });
+    }),
+    cancel: jest.fn(),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Test group 1: playQuestionAudio — browser speechSynthesis
 // ---------------------------------------------------------------------------
 describe('playQuestionAudio(text)', () => {
   beforeEach(() => {
     buildDOM();
     jest.resetModules();
-
-    global.URL.createObjectURL = jest.fn(() => 'blob:mock-url');
-    global.URL.revokeObjectURL = jest.fn();
-    global.fetch = jest.fn();
+    mockSpeechSynthesis();
   });
 
   afterEach(() => {
     jest.restoreAllMocks();
   });
 
-  it('calls POST /api/tts and sets <audio> src to the returned blob URL', async () => {
-    const mockBlob = new Blob(['audio-data'], { type: 'audio/mpeg' });
-    global.fetch.mockResolvedValue({
-      ok: true,
-      blob: jest.fn().mockResolvedValue(mockBlob),
-    });
-
-    const audioEl = document.getElementById('tts-audio');
-    audioEl.play = jest.fn().mockResolvedValue(undefined);
-
+  it('calls speechSynthesis.speak with fr-FR utterance', async () => {
     const { playQuestionAudio } = loadAudioModule();
 
     await playQuestionAudio('Décris-moi la ville où tu habites.');
 
-    expect(global.fetch).toHaveBeenCalledWith(
-      '/api/tts',
-      expect.objectContaining({
-        method: 'POST',
-        body: JSON.stringify({ text: 'Décris-moi la ville où tu habites.' }),
-      })
-    );
-    expect(global.URL.createObjectURL).toHaveBeenCalledWith(mockBlob);
-    expect(audioEl.src).toContain('blob:mock-url');
-    expect(audioEl.play).toHaveBeenCalled();
+    expect(global.speechSynthesis.speak).toHaveBeenCalled();
+    const utterance = global.speechSynthesis.speak.mock.calls[0][0];
+    expect(utterance.lang).toBe('fr-FR');
+    expect(utterance.text).toBe('Décris-moi la ville où tu habites.');
   });
 
-  it('stores blob URL as currentAudioUrl — replay re-plays without re-fetching', async () => {
-    const mockBlob = new Blob(['audio-data'], { type: 'audio/mpeg' });
-    global.fetch.mockResolvedValue({
-      ok: true,
-      blob: jest.fn().mockResolvedValue(mockBlob),
-    });
-
-    const audioEl = document.getElementById('tts-audio');
-    audioEl.play = jest.fn().mockResolvedValue(undefined);
-
+  it('shows replay button after speaking and re-speaks on replay without extra speak call', async () => {
     const { playQuestionAudio, replayAudio } = loadAudioModule();
 
     await playQuestionAudio('Bonjour');
 
-    const fetchCallsAfterFirstPlay = global.fetch.mock.calls.length;
+    const replayBtn = document.getElementById('audio-replay-btn');
+    expect(replayBtn.hidden).toBe(false);
 
-    // Replay must NOT call fetch again
+    const speakCountAfterPlay = global.speechSynthesis.speak.mock.calls.length;
+
     replayAudio();
-
-    expect(global.fetch.mock.calls.length).toBe(fetchCallsAfterFirstPlay);
-    // play() called once for original + once for replay
-    expect(audioEl.play).toHaveBeenCalledTimes(2);
+    // replayAudio calls playQuestionAudio which calls speak again
+    expect(global.speechSynthesis.speak.mock.calls.length).toBe(speakCountAfterPlay + 1);
   });
 
-  it('shows inline TTS error and does not throw when fetch returns non-ok', async () => {
-    global.fetch.mockResolvedValue({ ok: false, status: 502, statusText: 'Bad Gateway' });
+  it('shows inline TTS error and does not throw when speechSynthesis unavailable', async () => {
+    delete global.speechSynthesis;
 
     const { playQuestionAudio } = loadAudioModule();
 
@@ -118,8 +117,8 @@ describe('playQuestionAudio(text)', () => {
     expect(errorEl.textContent).toMatch(/audio unavailable/i);
   });
 
-  it('shows inline TTS error and does not throw on network rejection', async () => {
-    global.fetch.mockRejectedValue(new Error('Network failure'));
+  it('shows inline TTS error and does not throw on speech error', async () => {
+    mockSpeechSynthesis({ error: 'synthesis-failed' });
 
     const { playQuestionAudio } = loadAudioModule();
 
@@ -138,34 +137,25 @@ describe('Replay button', () => {
   beforeEach(() => {
     buildDOM();
     jest.resetModules();
-    global.URL.createObjectURL = jest.fn(() => 'blob:mock-url');
-    global.URL.revokeObjectURL = jest.fn();
-    global.fetch = jest.fn();
+    mockSpeechSynthesis();
   });
 
   afterEach(() => {
     jest.restoreAllMocks();
   });
 
-  it('replays audio without re-fetching /api/tts when currentAudioUrl is already set', async () => {
-    const mockBlob = new Blob(['audio-data'], { type: 'audio/mpeg' });
-    global.fetch.mockResolvedValue({
-      ok: true,
-      blob: jest.fn().mockResolvedValue(mockBlob),
-    });
-
-    const audioEl = document.getElementById('tts-audio');
-    audioEl.play = jest.fn().mockResolvedValue(undefined);
-
+  it('clicking replay button re-speaks the last question via speechSynthesis', async () => {
     const { playQuestionAudio } = loadAudioModule();
 
     await playQuestionAudio('Quelque chose');
-    const fetchCountAfterPlay = global.fetch.mock.calls.length;
+    const speakCountAfterPlay = global.speechSynthesis.speak.mock.calls.length;
 
-    // Simulate replay button click
     document.getElementById('audio-replay-btn').click();
 
-    expect(global.fetch.mock.calls.length).toBe(fetchCountAfterPlay);
+    // Allow microtask queue to flush
+    await Promise.resolve();
+
+    expect(global.speechSynthesis.speak.mock.calls.length).toBeGreaterThan(speakCountAfterPlay);
   });
 });
 
