@@ -28,11 +28,17 @@ window.saveHistory = function saveHistory(entry) {
   try {
     arr = JSON.parse(localStorage.getItem(LS_HISTORY) || '[]');
     if (!Array.isArray(arr)) arr = [];
-  } catch (_) {
+  } catch (e) {
+    console.error('history.js saveHistory: failed to read LS_HISTORY', e);
     arr = [];
   }
   arr.push(entry);
-  localStorage.setItem(LS_HISTORY, JSON.stringify(arr));
+  try {
+    localStorage.setItem(LS_HISTORY, JSON.stringify(arr));
+  } catch (e) {
+    console.error('history.js saveHistory: failed to write LS_HISTORY', e);
+    return; // cannot persist — bail out before writing question history too
+  }
 
   // --- frenchie_questionHistory ---
   // Store comments so core.js can include them in priorAttempts payloads
@@ -47,8 +53,8 @@ window.saveHistory = function saveHistory(entry) {
     });
     localStorage.setItem(LS_QUESTION_HISTORY, JSON.stringify(qh));
     _questionHistory = qh;
-  } catch (_) {
-    // non-fatal — question history update silently fails
+  } catch (e) {
+    console.error('history.js saveHistory: failed to update LS_QUESTION_HISTORY', e);
   }
 };
 
@@ -232,9 +238,9 @@ function renderHistoryEntries() {
   }
 
   historyList.innerHTML = sorted.map(entry => {
-    const truncQuestion = entry.question.length > 80
-      ? entry.question.slice(0, 80) + '…'
-      : entry.question;
+    const truncQuestion = (entry.question || '').length > 80
+      ? (entry.question || '').slice(0, 80) + '…'
+      : (entry.question || '');
 
     const truncResponse = (entry.userResponse || '').length > 100
       ? entry.userResponse.slice(0, 100) + '…'
@@ -268,21 +274,22 @@ function renderHistoryEntries() {
   }).join('\n');
 
   // Wire up expand toggles
+  function handleExpandClick() {
+    const expanded = this.getAttribute('aria-expanded') === 'true';
+    const full = decodeURIComponent(this.getAttribute('data-full'));
+    if (expanded) {
+      this.previousSibling.textContent = full.slice(0, 100) + '… ';
+      this.textContent = 'Show more';
+      this.setAttribute('aria-expanded', 'false');
+    } else {
+      // Replace the text node preceding the button with the full text
+      const parent = this.parentNode;
+      parent.innerHTML = full + ' <button class="btn-expand" type="button" aria-expanded="true" data-full="' + encodeURIComponent(full) + '">Show less</button>';
+      parent.querySelector('.btn-expand').addEventListener('click', handleExpandClick);
+    }
+  }
   historyList.querySelectorAll('.btn-expand').forEach(btn => {
-    btn.addEventListener('click', function () {
-      const expanded = this.getAttribute('aria-expanded') === 'true';
-      const full = decodeURIComponent(this.getAttribute('data-full'));
-      if (expanded) {
-        this.previousSibling.textContent = full.slice(0, 100) + '… ';
-        this.textContent = 'Show more';
-        this.setAttribute('aria-expanded', 'false');
-      } else {
-        // Replace the text node preceding the button with the full text
-        const parent = this.parentNode;
-        parent.innerHTML = full + ' <button class="btn-expand" type="button" aria-expanded="true" data-full="' + encodeURIComponent(full) + '">Show less</button>';
-        parent.querySelector('.btn-expand').addEventListener('click', arguments.callee.bind(parent.querySelector('.btn-expand')));
-      }
-    });
+    btn.addEventListener('click', handleExpandClick);
   });
 }
 
