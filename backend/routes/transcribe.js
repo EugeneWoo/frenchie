@@ -21,6 +21,7 @@ router.post('/', upload.single('audio'), async (req, res) => {
     );
     return res.status(200).json({ transcript });
   } catch (err) {
+    console.error('[transcribe] ElevenLabs error:', err.status, err.detail || err.message);
     return res.status(502).json({
       error: 'Transcription failed',
       detail: err.detail || err.message,
